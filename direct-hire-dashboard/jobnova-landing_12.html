@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jobnova — AI 职业助手</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          primary:  '#C7F22D',
+          dark:     '#0D0D0D',
+          tertiary: '#6366F1',
+        },
+        fontFamily: {
+          sans: ['Plus Jakarta Sans', 'sans-serif'],
+        },
+        borderRadius: {
+          '4xl': '32px',
+          '5xl': '40px',
+          '6xl': '48px',
+        },
+        boxShadow: {
+          'nv-sm':  '0 2px 18px rgba(0,0,0,0.05)',
+          'nv-xl':  '0 8px 48px rgba(0,0,0,0.08)',
+          'nv-2xl': '0 24px 80px rgba(0,0,0,0.13)',
+        },
+        backgroundImage: {
+          /* Highlight gradient: Lime → Mint, 104.68°
+             Use for: badges, tags, highlight cards, "Most Popular" labels */
+          'gradient-highlight': 'linear-gradient(104.68deg, #B0F90E 7.76%, #7BFFB4 98.83%)',
+        },
+      }
+    }
+  }
+</script>
+<style>
+  /* ══════════════════════════════════════════
+     NEON VELOCITY DESIGN SYSTEM
+     Primary   #C7F22D — electric lime
+     Secondary #0D0D0D — true dark
+     Tertiary  #6366F1 — indigo-violet
+     Surface       #FFFFFF
+     Surface-Low   #F7FEE7  (background shift tier 1)
+     Surface-Cont  #F0F9D4  (background shift tier 2)
+  ══════════════════════════════════════════ */
+  :root {
+    --primary:           #C7F22D;
+    --dark:              #0D0D0D;
+    --tertiary:          #6366F1;
+    --surface:           #FFFFFF;
+    --surface-low:       #F7FEE7;
+    --surface-container: #F0F9D4;
+    --text-muted:        #6B7280;
+    --text-secondary:    #374151;
+    --ghost-border:      rgba(229,231,235,0.5);
+    /* Ambient shadow scale — diffused, never heavy */
+    --shadow-sm:   0 2px 18px rgba(0,0,0,0.05);
+    --shadow-xl:   0 8px 48px rgba(0,0,0,0.08);
+    --shadow-2xl:  0 24px 80px rgba(0,0,0,0.13);
+
+    /* Surface Hierarchy — tonal layering system */
+    --surface-0: #FFFFFF;           /* Level 0: Background — pure white */
+    --surface-1: #F9FAFB;           /* Level 1: Nesting — soft gray */
+    --surface-2-start: #F7FEE7;     /* Level 2: Active Container — acid wash gradient start */
+    --surface-2-end:   #FFFFFF;     /* Level 2: Active Container — acid wash gradient end */
+
+    /* Gradient: Lime → Mint — used for highlight cards, badges, tags */
+    --gradient-highlight: linear-gradient(104.68deg, #B0F90E 7.76%, #7BFFB4 98.83%);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  /* ── GLOBAL: Plus Jakarta Sans only ── */
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--surface);
+    color: var(--dark);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Override any Inter/Manrope in Tailwind sections */
+  .font-sans, [class*="font-"] { font-family: 'Plus Jakarta Sans', sans-serif !important; }
+
+  /* ─────────────── NAV ─────────────── */
+  /* Glassmorphism: 80% opacity + backdrop-blur */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(255,255,255,0.80);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 16px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    /* No border-bottom — No-Line Rule */
+  }
+
+  .nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex-shrink: 0; }
+  .nav-brand-icon     { width: 31px; height: 31px; flex-shrink: 0; }
+  .nav-brand-wordmark { height: 16px; width: auto; flex-shrink: 0; }
+
+  .nav-tabs { display: flex; align-items: center; gap: 36px; flex-shrink: 0; }
+  .nav-tabs a {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.9375rem; font-weight: 600;
+    color: var(--dark); text-decoration: none; white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+  .nav-tabs a:hover { opacity: 0.55; }
+
+  .nav-affiliate { display: flex; align-items: center; gap: 6px; }
+
+  /* Badge: pill, primary bg, ExtraBold, 10px */
+  .nav-affiliate-badge {
+    background: var(--primary); color: var(--dark);
+    border-radius: 999px; padding: 3px 10px;
+    font-size: 0.625rem; font-weight: 800;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+
+  .nav-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+  /* Secondary/Dark btn: pill, dark bg, white text, bold */
+  .nav-btn-dark {
+    background: var(--dark); color: #fff;
+    border-radius: 999px; padding: 9px 22px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.875rem; font-weight: 700;
+    text-decoration: none; white-space: nowrap;
+    display: inline-flex; align-items: center;
+    transition: opacity 0.15s;
+  }
+  .nav-btn-dark:hover { opacity: 0.80; }
+
+  /* Ghost border fallback — 24px×1px vertical bar */
+  .nav-divider { width: 1px; height: 24px; background: var(--ghost-border); flex-shrink: 0; }
+
+  /* Ghost btn */
+  .nav-btn-ghost {
+    background: transparent; color: var(--dark);
+    border-radius: 999px; padding: 9px 18px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.875rem; font-weight: 600;
+    text-decoration: none; white-space: nowrap;
+    display: inline-flex; align-items: center;
+    transition: background 0.15s;
+  }
+  .nav-btn-ghost:hover { background: rgba(0,0,0,0.04); }
+
+  /* Primary btn: pill, primary bg, dark text, ExtraBold */
+  .nav-btn-signup {
+    background: var(--primary); color: var(--dark);
+    border-radius: 999px; padding: 9px 22px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.875rem; font-weight: 800;
+    text-decoration: none; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .nav-btn-signup:hover { opacity: 0.88; transform: translateY(-1px); }
+  .nav-btn-signup svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  /* ─────────────── HERO ─────────────── */
+  /* Outer: white surface. Card: surface-low island — Tonal Depth */
+  #hero {
+    padding: 88px 32px 0;
+    background: var(--surface);
+    min-height: 100vh;
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+
+  .hero-card {
+    background: var(--surface-low);   /* #F7FEE7 background shift */
+    border-radius: 36px;
+    width: 100%; max-width: 1280px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    column-gap: 64px; padding: 0 48px;
+    min-height: 576px; align-items: center;
+    overflow: hidden; position: relative;
+  }
+
+  .hero-left {
+    display: flex; flex-direction: column;
+    gap: 48px; align-items: flex-start;
+    z-index: 2; padding: 64px 0;
+  }
+  .hero-text-group { display: flex; flex-direction: column; gap: 24px; width: 100%; }
+
+  /* Badge pill — white island on surface-low */
+  .hero-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface); border-radius: 999px;
+    padding: 8px 18px; flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .hero-pill img { width: 20px; height: 20px; display: block; }
+  .hero-pill span {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem; font-weight: 800;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--tertiary); white-space: nowrap;
+  }
+
+  /* Display/Hero typography: ExtraBold, lh 1.1, tight tracking */
+  .hero-heading {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: clamp(2.75rem, 4.5vw, 4.5rem);
+    font-weight: 800; line-height: 1.1;
+    letter-spacing: -0.04em; color: var(--dark);
+    margin: 0; max-width: 620px; text-wrap: balance;
+  }
+  /* Primary underline emphasis */
+  .hero-heading .opportunity {
+    text-decoration: underline;
+    text-decoration-color: var(--primary);
+    text-underline-offset: 10px;
+    text-decoration-thickness: 4px;
+    color: var(--dark);
+  }
+
+  /* Body primary: 1.125rem */
+  .hero-subtext {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.125rem; font-weight: 400; line-height: 1.7;
+    color: var(--text-secondary); max-width: 520px;
+  }
+
+  /* Primary CTA: pill, primary bg, dark text, ExtraBold */
+  .hero-cta {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--primary); color: var(--dark);
+    border-radius: 999px; padding: 18px 44px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.0625rem; font-weight: 800;
+    text-decoration: none; white-space: nowrap;
+    transition: transform 0.15s, box-shadow 0.15s; flex-shrink: 0;
+  }
+  .hero-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 40px rgba(199,242,45,0.45);
+  }
+
+  .hero-right {
+    position: relative; height: 560px;
+    display: flex; align-items: flex-start; justify-content: center;
+  }
+  .hero-glow {
+    position: absolute; top: 8.57%; right: 1.79%; bottom: 0; left: 5.89%;
+    border-radius: 9999px;
+    background: linear-gradient(44.72deg, rgba(176,248,9,0.25) 0%, rgba(255,255,255,0.1) 100%);
+    filter: blur(50px); pointer-events: none; z-index: 0;
+  }
+  .hero-img {
+    position: absolute; top: 0; left: 0;
+    width: 560px; height: 560px;
+    object-fit: cover; border-radius: 24px; z-index: 1;
+  }
+  /* Floating chips: surface-low bg, dark border, rounded-full, Plus Jakarta Sans */
+  .hero-chip {
+    position: absolute; display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface-low); border: 2px solid var(--dark);
+    border-radius: 999px; padding: 10px 18px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.875rem; font-weight: 700;
+    color: var(--dark); white-space: nowrap;
+    z-index: 3; box-shadow: var(--shadow-sm);
+  }
+  .hero-chip img { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
+  .hero-chip.chip-notification { top: 155px; left: 53px; }
+  .hero-chip.chip-ai-actions   { top: 80px;  left: 323px; }
+  .hero-chip.chip-auto-apply   { top: 440px; left: 369px; }
+
+  .hero-star { position: absolute; z-index: 3; pointer-events: none; }
+  .hero-star img { display: block; }
+  .hero-star.s1 { top: 257px; left: 457px; width: 45px; height: 45px; }
+  .hero-star.s2 { top: 104px; left: 153px; width: 25px; height: 25px; }
+  .hero-star.s3 { top: 20px;  left: 359px; width: 25px; height: 25px; }
+  .hero-trend { position: absolute; z-index: 3; pointer-events: none; }
+  .hero-trend img { display: block; }
+  .hero-trend.t1 { top: 292px; left: 95px;  width: 58px; height: 58px; }
+  .hero-trend.t2 { top: 162px; left: 350px; width: 72px; height: 72px; }
+  .hero-dot { position: absolute; z-index: 3; pointer-events: none; }
+  .hero-dot img { display: block; }
+  .hero-dot.d1 { top: 169px; left: 502px; width: 23px; height: 23px; }
+  .hero-dot.d2 { top: 486px; left: 71px;  width: 23px; height: 23px; }
+
+  /* ─────────────── SHARED SECTION ─────────────── */
+  .section-inner { max-width: 1200px; margin: 0 auto; }
+
+  /* Label: 0.75rem, ExtraBold, uppercase, tertiary */
+  .section-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.75rem; font-weight: 800;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--tertiary); margin-bottom: 1.25rem;
+  }
+
+  /* Headlines: 2.25–2.75rem, Bold, tight, balanced */
+  .section-title {
+    font-size: clamp(2rem, 3.5vw, 2.75rem);
+    font-weight: 800; line-height: 1.1;
+    letter-spacing: -0.035em; text-wrap: balance;
+    margin-bottom: 1.25rem;
+  }
+
+  /* Body primary: 1.125rem */
+  .section-body {
+    font-size: 1.125rem; color: var(--text-secondary);
+    line-height: 1.7; max-width: 520px; margin-bottom: 4rem; font-weight: 400;
+  }
+
+  /* ─────────────── FAQ ─────────────── */
+  /* Background shift: surface-low (#F7FEE7) */
+  #faq { background: var(--surface-low); padding: 140px 5vw; }
+
+  .faq-grid { max-width: 760px; margin: 4rem auto 0; }
+
+  .faq-item {
+    padding: 28px 0;
+    border-bottom: 1px solid var(--ghost-border); /* Ghost border fallback */
+    cursor: pointer;
+  }
+  .faq-question {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 1.0625rem; font-weight: 700; color: var(--dark); gap: 1rem;
+  }
+  /* Icon: white island on surface-low, shadow-sm */
+  .faq-icon {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 300; flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform 0.2s, color 0.2s;
+  }
+  .faq-item.open .faq-icon { transform: rotate(45deg); color: var(--primary); }
+  .faq-answer {
+    font-size: 1.125rem; color: var(--text-secondary);
+    line-height: 1.7; max-height: 0; overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.2s; font-weight: 400;
+  }
+  .faq-item.open .faq-answer { max-height: 300px; padding-top: 16px; }
+
+  /* ─────────────── TAILWIND SECTION OVERRIDES ─────────────── */
+  /* Stats section — surface (#FFFFFF), no hard borders */
+  /* Logo cloud  — surface-low tonal band */
+  /* Features   — cards rounded-[32px], shadow-sm, surface bg */
+  /* Pricing     — shadow-xl for tiers, shadow-2xl for popular */
+  /* Testimonials— dark bg, glassmorphism cards */
+  /* CTA         — dark bg, primary CTA button */
+
+  /* Ensure all Tailwind-rendered headings use Plus Jakarta Sans */
+  h1, h2, h3, h4 { font-family: 'Plus Jakarta Sans', sans-serif !important; }
+  p, li, a, button, span { font-family: 'Plus Jakarta Sans', sans-serif !important; }
+
+  /* Tailwind blue links → dark or primary */
+  a { color: var(--dark); }
+  a:hover { color: var(--primary); }
+
+  /* Tailwind indigo accent → tertiary (#6366F1) — already same value */
+  /* Tailwind gray-100 borders on cards are acceptable as ghost borders */
+
+  /* Ensure all buttons are pill-shaped */
+  button, .rounded-full { border-radius: 9999px !important; }
+
+  /* Stats section: no border-y — use background shift instead */
+  /* Override Tailwind border-y border-gray-50 on stats section */
+  .border-y { border-top: none !important; border-bottom: none !important; }
+  .border-b { border-bottom: none !important; }
+  .border-t { border-top: none !important; }
+
+  /* Primary underline accent */
+  .accent-underline {
+    text-decoration: underline;
+    text-decoration-color: var(--primary);
+    text-underline-offset: 8px;
+    text-decoration-thickness: 3px;
+  }
+
+  /* ─────────────── ANIMATIONS ─────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeUp 0.6s ease both; }
+  .d1 { animation-delay: 0.1s; } .d2 { animation-delay: 0.2s; }
+  .d3 { animation-delay: 0.3s; } .d4 { animation-delay: 0.4s; }
+
+  /* ─────────────── RESPONSIVE ─────────────── */
+  @media (max-width: 900px) {
+    .nav-tabs, .nav-btn-dark, .nav-divider { display: none; }
+    .hero-card { grid-template-columns: 1fr; padding: 48px 32px; }
+    .hero-right { display: none; }
+    .hero-left { padding: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <!-- Brand -->
+  <a href="#" class="nav-brand">
+    <img class="nav-brand-icon" src="https://www.figma.com/api/mcp/asset/0c7ae1e1-6e4f-4a8b-8597-c341068d47db" alt="Jobnova icon" />
+    <img class="nav-brand-wordmark" src="https://www.figma.com/api/mcp/asset/89e4c1ed-11f4-4c0a-9a31-c1e65a721332" alt="Jobnova" />
+  </a>
+
+  <!-- Center Tabs -->
+  <div class="nav-tabs">
+    <a href="#features">Feature</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQs</a>
+    <div class="nav-affiliate">
+      <a href="#">Affiliate</a>
+      <span class="nav-affiliate-badge">30%</span>
+    </div>
+  </div>
+
+  <!-- Right Actions -->
+  <div class="nav-actions">
+    <a href="#" class="nav-btn-dark">Find Talents</a>
+    <div class="nav-divider"></div>
+    <a href="#" class="nav-btn-ghost">Login</a>
+    <a href="#" class="nav-btn-signup">
+      Sign Up
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="#09090b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </div>
+</nav>
+
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-card">
+
+    <!-- Left Content -->
+    <div class="hero-left">
+      <div class="hero-text-group">
+        <!-- "Next-Gen" pill -->
+        <div class="hero-pill">
+          <img src="https://www.figma.com/api/mcp/asset/922c9377-95b5-4632-a6d5-6f7c04b801fc" alt="" />
+          <span>Next-Gen Career Intelligence</span>
+        </div>
+
+        <!-- Headline -->
+        <h1 class="hero-heading">
+          The New Way Talent Meets <span class="opportunity">Opportunity</span> in the AI Era.🚀
+        </h1>
+
+        <!-- Subtext -->
+        <p class="hero-subtext">Navigate the complexity of your career rise with effortless intelligence.</p>
+      </div>
+
+      <!-- CTA -->
+      <a href="#" class="hero-cta">Start Explore for Free</a>
+    </div>
+
+    <!-- Right Visual -->
+    <div class="hero-right">
+      <div class="hero-glow"></div>
+
+      <!-- Main illustration image -->
+      <img class="hero-img" src="https://www.figma.com/api/mcp/asset/f9f18c4b-6554-4538-abc8-b3c26d84bf84" alt="Professional using laptop with AI job matching" />
+
+      <!-- Trend-up icons -->
+      <div class="hero-trend t1">
+        <img src="https://www.figma.com/api/mcp/asset/400fee76-ed75-4a65-a901-fb24c6651616" alt="" width="58" height="58" />
+      </div>
+      <div class="hero-trend t2">
+        <img src="https://www.figma.com/api/mcp/asset/6718eaa2-833e-46bf-b62d-029c5e936a2b" alt="" width="72" height="72" />
+      </div>
+
+      <!-- Feature chips -->
+      <div class="hero-chip chip-notification">
+        <img src="https://www.figma.com/api/mcp/asset/146cf590-9926-40ca-96ba-929b17851d07" alt="" />
+        Instant Notification
+      </div>
+      <div class="hero-chip chip-ai-actions">
+        <img src="https://www.figma.com/api/mcp/asset/24c5c94a-721d-4a3e-904b-64ea75d89954" alt="" />
+        AI Actions
+      </div>
+      <div class="hero-chip chip-auto-apply">
+        <img src="https://www.figma.com/api/mcp/asset/2183fc64-b586-4a03-b427-7e83ecd019f1" alt="" />
+        Auto Apply
+      </div>
+
+      <!-- Star decorations -->
+      <div class="hero-star s1"><img src="https://www.figma.com/api/mcp/asset/6d25bbfe-7aec-475b-a09a-253b1072e563" alt="" width="45" height="45" /></div>
+      <div class="hero-star s2"><img src="https://www.figma.com/api/mcp/asset/e8770095-cf59-4707-805a-37648257da08" alt="" width="25" height="25" /></div>
+      <div class="hero-star s3"><img src="https://www.figma.com/api/mcp/asset/e8770095-cf59-4707-805a-37648257da08" alt="" width="25" height="25" /></div>
+
+      <!-- Dot decorations -->
+      <div class="hero-dot d1"><img src="https://www.figma.com/api/mcp/asset/4e0d0b56-e8ba-4055-8bda-b201fd7e7866" alt="" width="23" height="23" /></div>
+      <div class="hero-dot d2"><img src="https://www.figma.com/api/mcp/asset/4e0d0b56-e8ba-4055-8bda-b201fd7e7866" alt="" width="23" height="23" /></div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- BEGIN: Stats Section -->
+<section class="py-20 bg-white">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+<div class="text-left group">
+<div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors" style="background:rgba(99,102,241,0.12);">
+<svg class="w-6 h-6" fill="none" stroke="#6366F1" viewbox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-2xl font-extrabold mb-1"><span style="color:#0D0D0D;">90%</span> <span class="text-sm font-medium" style="color:#6B7280;">less time spent on manual search</span></h3>
+<div class="h-1 w-12 mt-2" style="background:#C7F22D;"></div>
+</div>
+<div class="text-left group">
+<div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors" style="background:rgba(99,102,241,0.12);">
+<svg class="w-6 h-6" fill="none" stroke="#6366F1" viewbox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-2xl font-extrabold mb-1"><span style="color:#0D0D0D;">3x</span> <span class="text-sm font-medium" style="color:#6B7280;">higher visibility to recruiters</span></h3>
+<div class="h-1 w-12 mt-2" style="background:#C7F22D;"></div>
+</div>
+<div class="text-left group">
+<div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors" style="background:rgba(99,102,241,0.12);">
+<svg class="w-6 h-6" fill="none" stroke="#6366F1" viewbox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-2xl font-extrabold mb-1"><span style="color:#0D0D0D;">5 min</span> <span class="text-sm font-medium" style="color:#6B7280;">response time for new listings</span></h3>
+<div class="h-1 w-12 mt-2" style="background:#C7F22D;"></div>
+</div>
+<div class="text-left group">
+<div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors" style="background:rgba(99,102,241,0.12);">
+<svg class="w-6 h-6" fill="none" stroke="#6366F1" viewbox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-2xl font-extrabold mb-1"><span style="color:#0D0D0D;">Unlimited</span> <span class="text-sm font-medium" style="color:#6B7280;">insider-only opportunities</span></h3>
+<div class="h-1 w-12 mt-2" style="background:#C7F22D;"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Stats Section -->
+
+<!-- BEGIN: Logo Cloud -->
+<section class="py-14" style="background:#F7FEE7;">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<p class="text-center mb-8" style="font-size:0.75rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#6B7280;">Trusted by professionals at</p>
+<div class="flex flex-wrap justify-center items-center gap-12 md:gap-20" style="opacity:0.55;filter:grayscale(1);">
+<img alt="Google" class="h-6 md:h-8" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOtfvckrhlmRq6fA2ZAELICCiXS90R5hrjRf4IOyJS0UW9DPtsMX39Y6Pke6MX05cqjmBD_NNcPtLEVQY68SOL5o0AJfz9Xn8K4tughXAcwv_QFg5N8pLJewkMT6N_NNhiIe_PahAKDDa8W4rRZXgFw3mzg35RK-ndSSn6Nj4w5co0QthRIg1ehKwXeyie6r0PyaqGnQZMF9qn12pipUpcqvvujSXEVx4Xodx_3yOvqLbKj80pjRs47S7iLdvUqotV-yJ6_3p-Zpo" />
+<img alt="Trello" class="h-6 md:h-8" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5lXpJkilLn1jxcnfBq8rZ6vkGwuWwJyo2KkorgLyOyYSNuB-0GV8uL5m27cnpR9Yx70rFRasvKwKXAnLXYYA9_kexwOxQcrEZp6oWJcX1HwrEMDY0SHPp_2Jozs3EvCBSDykgeau2zkAhhhNf7u8kaHDvNkPzlzxRW9XR5z3yO9fHnFsA0p1KGxUYmhyOf6K56s51IlZ3WW8VQYxymNz52dymU0ralr_V32ST0ntI4RBK4g3uZyZJDXaz1_YYTF40wkArSDaCBQI" />
+<img alt="Productboard" class="h-6 md:h-8" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkgP7L6tzA2YSei7pfPPhb-KoBzt--gTPVkSarakUqSNnyGIrdGJXQLxc4dhUk2hme5dmi5wRKSew-wHcrt6-1aVtj3iUu-yjg91w4CfCQNvgYsMDKDMjaiMlFU_Y-VJuYAgkF-VVNDouwpKZhTMIDb7CmuHa-OzhjVZ47RqmZXlfY6pA2o2XuzsGbwHLkTR0FHscMP2luUbbAu_bqTBgR3nXMqinm7cWLbAIj-GMb1NknczFcq6JKLySpytXOSUZVdLBe59-jke4" />
+<img alt="Pendo" class="h-6 md:h-8" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaJbuoMV_7bBUsidDHnNQWdhjP3c9UAkpYmZywEJ_ocXRCiBNyhsB1zfvIMRJrBiRttvztcjGZ-e6YFVqq_WG9un1KZlXULDc6oj4cPvXWObk7aAtM2fJajQeCPR9UGqfZxkveCAO4MgIpL7SgVwfbAZ3pRYz6koul6YpAwifhwXyUEB4tkrohGzj-sdc6ye5WOG33uRXYLwS7Oh812nkT4p41OxwU_PDuh42-Zq0nfUd0pNlzsFc65eMGUvi1KPordwdndNG4zRE" />
+<img alt="Airwallex" class="h-6 md:h-8" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuV7ZxPg03cEp5HAKL1UagergezC5e3AfhwFiGiBa5Be-ZsRhwpgvcHTOkdO2OTmmQYbgrH_CqBzi2zX0rlXkz-OBSHMgiw_S97XV4IY6rnqzbprRq5a2zUo1liQsejzO44HyMU0pRMltCehZldlcrte_W-6AusnHU15MZ0eCa898KDc9a1bZAb0-keXC13SnLF8xyVANL2A5l_PQs49vRx-j3ScAFJk_iQcL7UxwWejg7ww5TvFD9hsHhMMcI4Y2mF4A9Gv6Qs2U" />
+<img alt="Amazon" class="h-8 md:h-10 mt-2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMR1_CXNC6-qEv3fhVmUJgDPPQVbp95FdupALCOhoCQWHj5-SRiDg2ZtLYXmrIkevBtBfkv0mG5zRRCg_Hx7KN4C1dh-yXoSdnDMJ9NnGkHTncXkEhKv7iMysVdED3gvnER8YJjj1u4Ht8hvuizkOFNlSbOQKtl6U4GScThI31MTpOFT9hVOee2DczNzIhWLoLkdp3qQ0DbEws_QiDIVWU5-yWipIOSN7TwbFkTD8Yy6YXQsj3_cIjl8HBCPo6HbBg-UNxFtv_SJw" />
+</div>
+</div>
+</section>
+<!-- END: Logo Cloud -->
+
+
+<!-- BEGIN: Features Grid -->
+<section class="py-28" style="background:var(--surface-1);">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="mb-16">
+<p class="mb-3" style="font-size:0.75rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#6366F1;">✦ Core Features</p>
+<h2 class="text-4xl md:text-5xl font-extrabold tracking-tight text-wrap-balance" style="color:#0D0D0D;letter-spacing:-0.035em;line-height:1.1;text-wrap:balance;">Precision Powered by Intelligence</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+<!-- Feature Card 1 (Large) -->
+<div class="md:col-span-2 rounded-[32px] p-8 md:p-12 overflow-hidden relative group transition-all hover:-translate-y-1" style="background:#FFFFFF;box-shadow:0 2px 18px rgba(0,0,0,0.05);">
+<div class="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style="background:rgba(199,242,45,0.12);">
+<svg class="w-6 h-6" fill="none" stroke="#0D0D0D" viewbox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<span style="display:inline-block;background:#C7F22D;color:#0D0D0D;border-radius:999px;padding:3px 12px;font-size:0.625rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:1rem;">New</span>
+<h3 class="text-2xl font-bold mb-4" style="letter-spacing:-0.02em;">Instant Job Notification</h3>
+<p class="max-w-md mb-8" style="font-size:1.125rem;color:#6B7280;line-height:1.7;font-weight:400;">
+Our neural network scans 50,000+ sources per second. Be the first to apply with precision-matched alerts that arrive before the job hits public boards.
+</p>
+<div class="relative w-full h-48 md:h-64 rounded-[24px] overflow-hidden">
+<img alt="Instant Job Notification Preview" class="w-full h-full object-cover object-top" src="Instant_Job_Notification.png" />
+</div>
+</div>
+<!-- Feature Card 2 (Vertical) — dark bg -->
+<div class="rounded-[32px] p-8 md:p-12 relative overflow-hidden group transition-all hover:-translate-y-1" style="background:#0D0D0D;">
+<div class="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style="background:rgba(199,242,45,0.12);">
+<svg class="w-6 h-6" fill="none" stroke="#C7F22D" viewbox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-2xl font-bold mb-4" style="color:#FFFFFF;letter-spacing:-0.02em;">AI Agent Support</h3>
+<p style="color:rgba(255,255,255,0.6);line-height:1.7;font-size:1.125rem;font-weight:400;">
+A persistent career advocate that learns your goals, handles outreach, and manages your entire pipeline while you sleep.
+</p>
+<div class="absolute -bottom-10 -right-10 w-48 h-48 rounded-full" style="background:rgba(199,242,45,0.07);filter:blur(40px);"></div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Feature Card 3 -->
+<div class="rounded-[32px] p-8 transition-all hover:-translate-y-1" style="background:#FFFFFF;box-shadow:0 2px 18px rgba(0,0,0,0.05);">
+<div class="w-12 h-12 rounded-xl flex items-center justify-center mb-6" style="background:rgba(199,242,45,0.12);">
+<svg class="w-6 h-6" fill="none" stroke="#0D0D0D" viewbox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<h3 class="text-xl font-bold mb-3" style="letter-spacing:-0.02em;">AI Resume Customizer</h3>
+<p style="font-size:0.9375rem;color:#6B7280;line-height:1.7;font-weight:400;">Instantly re-tune your resume for every single application. 100% ATS-optimized, 0% effort.</p>
+</div>
+<!-- Feature Card 4+5 (Combined: AI Auto Apply + Automation Status) -->
+<div class="rounded-[32px] p-8 overflow-hidden flex flex-col justify-between md:col-span-2 transition-all hover:-translate-y-1" style="background:#C7F22D;">
+<div class="flex items-start gap-6 mb-6">
+<div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style="background:rgba(255,255,255,0.12);">
+<svg class="w-6 h-6" fill="none" stroke="#0D0D0D" viewbox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<div>
+<h3 class="text-xl font-bold mb-2" style="letter-spacing:-0.02em;">AI Auto Apply</h3>
+<p style="font-size:0.9375rem;color:rgba(13,13,13,0.65);line-height:1.7;font-weight:400;">Scale your search effortlessly. Our agent automatically applies to over 3,000 curated positions that fit your criteria perfectly.</p>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-3">
+<span style="font-size:0.625rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:rgba(13,13,13,0.55);">Automation Status</span>
+<div class="flex gap-1 items-center">
+<div class="w-1.5 h-1.5 rounded-full animate-pulse" style="background:#0D0D0D;"></div>
+<span style="font-size:0.625rem;font-weight:800;color:rgba(13,13,13,0.45);">LIVE</span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-3">
+<div class="p-4 rounded-[20px]" style="background:rgba(255,255,255,0.5);">
+<div class="text-2xl font-extrabold" style="color:#0D0D0D;">12</div>
+<div style="font-size:0.625rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:rgba(13,13,13,0.55);margin-top:4px;">Applied Today</div>
+</div>
+<div class="p-4 rounded-[20px]" style="background:rgba(255,255,255,0.5);">
+<div class="text-2xl font-extrabold" style="color:#0D0D0D;">315</div>
+<div style="font-size:0.625rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:rgba(13,13,13,0.55);margin-top:4px;">Completed Apps</div>
+</div>
+<div class="p-4 rounded-[20px]" style="background:rgba(13,13,13,0.08);">
+<div class="text-2xl font-extrabold" style="color:#0D0D0D;">94%</div>
+<div style="font-size:0.625rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:rgba(13,13,13,0.55);margin-top:4px;">Match Rate</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Features Grid -->
+
+
+<!-- BEGIN: Pricing Section -->
+<section class="py-28" style="background:#FFFFFF;">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+<p class="mb-3" style="font-size:0.75rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#6366F1;">✦ Pricing</p>
+<h2 class="text-4xl md:text-5xl font-extrabold mb-12" style="color:#0D0D0D;letter-spacing:-0.035em;line-height:1.1;text-wrap:balance;">We've got a plan that's <span style="text-decoration:underline;text-decoration-color:#C7F22D;text-underline-offset:8px;text-decoration-thickness:3px;">Perfect</span> for you</h2>
+<!-- Segmented Toggle: surface-low bg, white elevated pill for active -->
+<div class="inline-flex items-center p-1.5 rounded-full mb-16" style="background:#F7FEE7;gap:4px;">
+<button class="px-8 py-2.5 rounded-full text-sm font-bold transition-all" style="background:#FFFFFF;color:#0D0D0D;box-shadow:0 2px 12px rgba(0,0,0,0.07);">Monthly</button>
+<button class="px-8 py-2.5 rounded-full text-sm font-bold" style="background:transparent;color:#6B7280;">Quarterly <span style="color:#6366F1;font-weight:800;margin-left:4px;">Save up to 50%</span></button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8" style="align-items:start;">
+<!-- Basic — shadow-xl -->
+<div class="rounded-[32px] p-10 flex flex-col text-left relative transition-all hover:-translate-y-1" style="background:#FFFFFF;box-shadow:0 8px 48px rgba(0,0,0,0.08);">
+<span class="absolute top-5 right-5 rounded-full px-3 py-1 font-extrabold" style="background:#0D0D0D;color:#FFFFFF;font-size:0.625rem;letter-spacing:0.06em;text-transform:uppercase;">Save 38%</span>
+<p class="font-extrabold mb-2" style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:#6B7280;">Basic</p>
+<p class="mb-8" style="font-size:0.875rem;color:#6B7280;line-height:1.6;">For basic features to kickstart your job search efficiency</p>
+<div class="mb-10">
+<span style="font-size:3.5rem;font-weight:800;letter-spacing:-0.05em;color:#0D0D0D;">$6.99</span>
+<span class="block mt-1 line-through" style="font-size:0.75rem;color:#9CA3AF;">$10.00/monthly</span>
+<span class="block mt-1 font-bold" style="font-size:0.75rem;color:#6366F1;">BILLED QUARTERLY, $20.99</span>
+</div>
+<button class="w-full py-3.5 rounded-full font-bold mb-10 transition-all hover:opacity-85" style="background:#0D0D0D;color:#FFFFFF;font-size:0.9375rem;">Get started</button>
+<div class="space-y-4">
+<p style="font-size:0.625rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#0D0D0D;">Features</p>
+<p style="font-size:0.875rem;color:#9CA3AF;">Everything in our free plan plus...</p>
+<ul class="space-y-3">
+<li class="flex items-center gap-3 font-medium" style="font-size:0.9375rem;color:#374151;">
+<div class="rounded-full p-0.5 shrink-0" style="background:#C7F22D;"><svg class="w-3 h-3" fill="none" stroke="#0D0D0D" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path></svg></div>50 Auto Apply per month</li>
+<li class="flex items-center gap-3 font-medium" style="font-size:0.9375rem;color:#374151;">
+<div class="rounded-full p-0.5 shrink-0" style="background:#C7F22D;"><svg class="w-3 h-3" fill="none" stroke="#0D0D0D" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path></svg></div>10 Resume Credits</li>
+</ul>
+</div>
+</div>
+<!-- Pro (Featured) — shadow-2xl, scale-up -->
+<div class="rounded-[32px] p-10 flex flex-col text-left relative transition-all hover:-translate-y-1" style="background:#FFFFFF;box-shadow:0 24px 80px rgba(0,0,0,0.13);transform:scale(1.03);z-index:2;outline:2px solid #C7F22D;">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full px-5 py-1.5 font-extrabold whitespace-nowrap" style="background:var(--gradient-highlight);color:#09090b;font-size:0.625rem;letter-spacing:0.08em;text-transform:uppercase;">⚡ Most Popular (Save 38%)</div>
+<p class="font-extrabold mb-2" style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:#6B7280;">Pro</p>
+<p class="mb-8" style="font-size:0.875rem;color:#6B7280;line-height:1.6;">Unlock advanced AI capacities, maximize your job hunting success</p>
+<div class="mb-10">
+<span style="font-size:3.5rem;font-weight:800;letter-spacing:-0.05em;color:#0D0D0D;">$15.99</span>
+<span class="block mt-1 line-through" style="font-size:0.75rem;color:#9CA3AF;">$25.99/monthly</span>
+<span class="block mt-1 font-bold" style="font-size:0.75rem;color:#6366F1;">BILLED QUARTERLY, $47.99</span>
+</div>
+<!-- Primary CTA button -->
+<button class="w-full py-3.5 rounded-full font-extrabold mb-10 transition-all hover:opacity-88" style="background:#C7F22D;color:#0D0D0D;font-size:0.9375rem;">Get started</button>
+<div class="space-y-4">
+<p style="font-size:0.625rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#0D0D0D;">Features</p>
+<p style="font-size:0.875rem;color:#9CA3AF;">Everything in our free plan plus...</p>
+<ul class="space-y-3">
+<li class="flex items-center gap-3 font-medium" style="font-size:0.9375rem;color:#374151;">
+<div class="rounded-full p-0.5 shrink-0" style="background:#C7F22D;"><svg class="w-3 h-3" fill="none" stroke="#0D0D0D" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path></svg></div>150 Auto Apply per month</li>
+<li class="flex items-center gap-3 font-medium" style="font-size:0.9375rem;color:#374151;">
+<div class="rounded-full p-0.5 shrink-0" style="background:#C7F22D;"><svg class="w-3 h-3" fill="none" stroke="#0D0D0D" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path></svg></div>50 Resume Credits</li>
+</ul>
+</div>
+</div>
+<!-- Pro+ — shadow-xl -->
+<div class="rounded-[32px] p-10 flex flex-col text-left relative transition-all hover:-translate-y-1" style="background:#FFFFFF;box-shadow:0 8px 48px rgba(0,0,0,0.08);">
+<span class="absolute top-5 right-5 rounded-full px-3 py-1 font-extrabold" style="background:#0D0D0D;color:#FFFFFF;font-size:0.625rem;letter-spacing:0.06em;text-transform:uppercase;">Save 50%</span>
+<p class="font-extrabold mb-2" style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:#6B7280;">Pro+</p>
+<p class="mb-8" style="font-size:0.875rem;color:#6B7280;line-height:1.6;">Unlock advanced AI capacities, maximize your job hunting success</p>
+<div class="mb-10">
+<span style="font-size:3.5rem;font-weight:800;letter-spacing:-0.05em;color:#0D0D0D;">$29.99</span>
+<span class="block mt-1 line-through" style="font-size:0.75rem;color:#9CA3AF;">$59.99/monthly</span>
+<span class="block mt-1 font-bold" style="font-size:0.75rem;color:#6366F1;">BILLED QUARTERLY, $89.99</span>
+</div>
+<button class="w-full py-3.5 rounded-full font-bold mb-10 transition-all hover:opacity-85" style="background:#0D0D0D;color:#FFFFFF;font-size:0.9375rem;">Get started</button>
+<div class="space-y-4">
+<p style="font-size:0.625rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#0D0D0D;">Features</p>
+<p style="font-size:0.875rem;color:#9CA3AF;">Everything in our free plan plus...</p>
+<ul class="space-y-3">
+<li class="flex items-center gap-3 font-medium" style="font-size:0.9375rem;color:#374151;">
+<div class="rounded-full p-0.5 shrink-0" style="background:#C7F22D;"><svg class="w-3 h-3" fill="none" stroke="#0D0D0D" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path></svg></div>300 Auto Apply per month</li>
+<li class="flex items-center gap-3 font-medium" style="font-size:0.9375rem;color:#374151;">
+<div class="rounded-full p-0.5 shrink-0" style="background:#C7F22D;"><svg class="w-3 h-3" fill="none" stroke="#0D0D0D" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path></svg></div>150 Resume Credits</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Pricing Section -->
+
+<!-- BEGIN: Testimonials -->
+<section class="py-28" style="background:var(--surface-1);">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="text-center mb-16">
+<p class="mb-3" style="font-size:0.75rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#6366F1;">✦ Testimonials</p>
+<h2 class="text-4xl font-extrabold mb-4" style="color:#0D0D0D;letter-spacing:-0.035em;line-height:1.1;text-wrap:balance;">Trusted by Talent Worldwide</h2>
+<p style="color:#6B7280;font-size:1.125rem;">Real success stories from our lucid community.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Testimonial 1 -->
+<div class="flex flex-col h-full p-8 transition-all hover:-translate-y-1" style="background:#FFFFFF;border-radius:32px;box-shadow:0 2px 18px rgba(0,0,0,0.05);">
+<div class="flex justify-between items-start mb-6">
+<img alt="Zoom" class="h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2hMO_0KJVvBkv33I3jfjNAY6FjsbY6yKvddJjcdXToYK-LIREwa-EGQjbjDUhK8Azrr89ad18IA2CkiGufEujf0t8z9yh5atbnc-WbTyCzl5J8B3l8YWw2puBQYvzG6HsD9TvXGCPxAPCS091Kve9lNrd03bFQ0UeV0j-P7T5aFB3-StNR3gg_DbvTmLsfpgDbHiQcagie4sqx5UWY8um-knFU9cHbBW6SUWazr-3A1kIjpveo4E7QeBi4BMtnI_PYebIFzvd_Uw" />
+<div class="flex" style="color:#C7F22D;">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+</div>
+</div>
+<p class="font-bold mb-4" style="color:#0D0D0D;font-size:1rem;">Found my dream internship fast.</p>
+<p class="mb-auto italic" style="color:#6B7280;font-size:0.9375rem;line-height:1.7;">"As a student, timing is everything. Jobnova's real-time updates meant I applied to openings right when they went live. The global coverage helped me land a remote internship with Zoom, something I might have missed entirely without the platform."</p>
+<div class="flex items-center gap-4 mt-8">
+<img alt="Liam" class="w-10 h-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjHWvTVf5Z-8iD2_X_a6SsFxwEbSdF9erycA38WKsOf-fRxPVSUSNdMrbyhsSumH15hzn34k0111PZpmmLeji7lCUHJUMBsfBlooujn4YkrnrGcUunHzo88rvDN1eFhhWuVb74CkCdFD-P14GoXCxrN8EMTb_dIdXeCKrqIsxug0Wn-EFTmz3S6i9wFaSAuSWbmquebU4qsPLqxWaRPp99VqTkcu4Tdyb4NW_6rpB51Sbw-TFTvyIWODIENe0Tr0YqPCbDp3mI48o" />
+<div>
+<div class="font-bold" style="color:#0D0D0D;font-size:0.875rem;">Liam Thompson</div>
+<div style="color:#9CA3AF;font-size:0.75rem;">Software Developer (Intern)</div>
+</div>
+</div>
+</div>
+<!-- Testimonial 2 -->
+<div class="flex flex-col h-full p-8 transition-all hover:-translate-y-1" style="background:#FFFFFF;border-radius:32px;box-shadow:0 2px 18px rgba(0,0,0,0.05);">
+<div class="flex justify-between items-start mb-6">
+<img alt="Canva" class="h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4vvpgHKIUR8PoL4iDmVzoIMALfHBqGV_hASFWH9Si5tEUkrjLPVP1WdJb4S3N-qArbmdX1X6CScpS4nZfvZKXicNb0oaLCTrXVZ26foKDqVRaJJHqKWNFFAAJIx6F9HUetge_Ab1hWK7nJUZP8MVQcyLSfHZ0sdIvunz4hXWtSvUQC_M6GApJg_uYQsT4Nefz6PF1nLSRNY8NyhOEvnB1y1xYz1LCbAxAbhffTl40FynhpUxY1hggSG4EkX8vhz7cchN3-CxJzxE" />
+<div class="flex" style="color:#C7F22D;">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+</div>
+</div>
+<p class="font-bold mb-4" style="color:#0D0D0D;font-size:1rem;">Precision that saves you time.</p>
+<p class="mb-auto italic" style="color:#6B7280;font-size:0.9375rem;line-height:1.7;">"I've used job boards before, but nothing compares to Jobnova's accuracy. The match percentages were spot-on and helped me skip irrelevant roles. Within two weeks, I was interviewing for positions that aligned perfectly with my design background."</p>
+<div class="flex items-center gap-4 mt-8">
+<img alt="Emily" class="w-10 h-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCx_1jla1l90mCleTexVwExreSl8RoLki5ZpNe8lH9g51R-UWmiQqcUOAj2p4lWMIGH9OAolFXBzH30wnfwr-BDK6rUwHfR93S6tbKJ6COgl98bMAJbWlgSTzyNF18esyYVqMlNs06bVkxPOYBDB4YLy62IcCS-1xNa5BqSZLBCGDWbHiuKcFNm45OoSELo8OasPIXE9PslnyyTL61UYJzhrpM6-97FYD3lnfplfn7XlVPk3fL_eBbej5xDDaVv3oX8Pt7W1sSOra8" />
+<div>
+<div class="font-bold" style="color:#0D0D0D;font-size:0.875rem;">Emily Carter</div>
+<div style="color:#9CA3AF;font-size:0.75rem;">UI/UX Designer (Full time)</div>
+</div>
+</div>
+</div>
+<!-- Testimonial 3 -->
+<div class="flex flex-col h-full p-8 transition-all hover:-translate-y-1" style="background:#FFFFFF;border-radius:32px;box-shadow:0 2px 18px rgba(0,0,0,0.05);">
+<div class="flex justify-between items-start mb-6">
+<img alt="Microsoft" class="h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjPO9rd3OSnroYMgh8dRVWZG8DBUfEWghRfGqdlmNFlSnbdaHidVJrzS3M0ZxhlgRQdyGk0DfiYhUsIJRczSMAlqM77g_KslIbJJhNzrnwitr1DcDKb-yq5FtsAxJSzVi-PGc_vGrF581jnEw1BHjSY0oGzI22EUvbNNt2gHHI38JNhEd1PvaWbuqFdkBlDwqUyp3ozF7kXfE4qSOhFgLNYyU15LCGkL8_kElH1yqpWEvnU7QxwlW3WUADC7dksfgRDLuk-e5BOjQ" />
+<div class="flex" style="color:#C7F22D;">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+</div>
+</div>
+<p class="font-bold mb-4" style="color:#0D0D0D;font-size:1rem;">The most efficient job hunt ever.</p>
+<p class="mb-auto italic" style="color:#6B7280;font-size:0.9375rem;line-height:1.7;">"With Jobnova, I no longer had to juggle multiple job sites. It pulled the most relevant openings into one place and kept them updated in real time. I secured my role at Microsoft in less than a month, and it felt effortless."</p>
+<div class="flex items-center gap-4 mt-8">
+<img alt="Sofia" class="w-10 h-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8X9fN_UTMTLjx6wIvJ3rjVRD9fYQz9YDHzglxWgrPVnYLhoA_pFOeCf1cB8H6iUW9wo5_uk_VGDJdT9Sn4XomPD1mSu25QtOINAw65a1G4FulwPzYFt4scOThG9MzHaaTZlDyP9EocJKzs871MwN46P21aZ1T6f3cL7A5qmZuN8wcCBusx8vOvwlCcMAbZLfk7CAxFwteSWv5r5MqNQPf8pwYZS86LtmoeRs40nvwOZcqgwNeRNxtT_OIpPce0BFqu9kP103r0b0" />
+<div>
+<div class="font-bold" style="color:#0D0D0D;font-size:0.875rem;">Sofia Martinez</div>
+<div style="color:#9CA3AF;font-size:0.75rem;">Software Developer (Full time)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Testimonial 1 -->
+<div class="flex flex-col h-full p-8 transition-all" style="background:rgba(255,255,255,0.05);border-radius:32px;backdrop-filter:blur(8px);">
+<div class="flex justify-between items-start mb-6">
+<img alt="Zoom" class="h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2hMO_0KJVvBkv33I3jfjNAY6FjsbY6yKvddJjcdXToYK-LIREwa-EGQjbjDUhK8Azrr89ad18IA2CkiGufEujf0t8z9yh5atbnc-WbTyCzl5J8B3l8YWw2puBQYvzG6HsD9TvXGCPxAPCS091Kve9lNrd03bFQ0UeV0j-P7T5aFB3-StNR3gg_DbvTmLsfpgDbHiQcagie4sqx5UWY8um-knFU9cHbBW6SUWazr-3A1kIjpveo4E7QeBi4BMtnI_PYebIFzvd_Uw" style="filter:brightness(0) invert(1);opacity:0.6;" />
+<div class="flex" style="color:#C7F22D;">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+</div>
+</div>
+<p class="font-bold mb-4" style="color:#FFFFFF;font-size:1rem;">Found my dream internship fast.</p>
+<p class="mb-auto italic" style="color:rgba(255,255,255,0.65);font-size:0.9375rem;line-height:1.7;">"As a student, timing is everything. Jobnova's real-time updates meant I applied to openings right when they went live. The global coverage helped me land a remote internship with Zoom, something I might have missed entirely without the platform."</p>
+<div class="flex items-center gap-4 mt-8">
+<img alt="Liam" class="w-10 h-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjHWvTVf5Z-8iD2_X_a6SsFxwEbSdF9erycA38WKsOf-fRxPVSUSNdMrbyhsSumH15hzn34k0111PZpmmLeji7lCUHJUMBsfBlooujn4YkrnrGcUunHzo88rvDN1eFhhWuVb74CkCdFD-P14GoXCxrN8EMTb_dIdXeCKrqIsxug0Wn-EFTmz3S6i9wFaSAuSWbmquebU4qsPLqxWaRPp99VqTkcu4Tdyb4NW_6rpB51Sbw-TFTvyIWODIENe0Tr0YqPCbDp3mI48o" />
+<div>
+<div class="font-bold" style="color:#FFFFFF;font-size:0.875rem;">Liam Thompson</div>
+<div style="color:rgba(255,255,255,0.45);font-size:0.75rem;">Software Developer (Intern)</div>
+</div>
+</div>
+</div>
+<!-- Testimonial 2 -->
+<div class="flex flex-col h-full p-8 transition-all" style="background:rgba(255,255,255,0.05);border-radius:32px;backdrop-filter:blur(8px);">
+<div class="flex justify-between items-start mb-6">
+<img alt="Canva" class="h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4vvpgHKIUR8PoL4iDmVzoIMALfHBqGV_hASFWH9Si5tEUkrjLPVP1WdJb4S3N-qArbmdX1X6CScpS4nZfvZKXicNb0oaLCTrXVZ26foKDqVRaJJHqKWNFFAAJIx6F9HUetge_Ab1hWK7nJUZP8MVQcyLSfHZ0sdIvunz4hXWtSvUQC_M6GApJg_uYQsT4Nefz6PF1nLSRNY8NyhOEvnB1y1xYz1LCbAxAbhffTl40FynhpUxY1hggSG4EkX8vhz7cchN3-CxJzxE" style="filter:brightness(0) invert(1);opacity:0.6;" />
+<div class="flex" style="color:#C7F22D;">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+</div>
+</div>
+<p class="font-bold mb-4" style="color:#FFFFFF;font-size:1rem;">Precision that saves you time.</p>
+<p class="mb-auto italic" style="color:rgba(255,255,255,0.65);font-size:0.9375rem;line-height:1.7;">"I've used job boards before, but nothing compares to Jobnova's accuracy. The match percentages were spot-on and helped me skip irrelevant roles. Within two weeks, I was interviewing for positions that aligned perfectly with my design background."</p>
+<div class="flex items-center gap-4 mt-8">
+<img alt="Emily" class="w-10 h-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCx_1jla1l90mCleTexVwExreSl8RoLki5ZpNe8lH9g51R-UWmiQqcUOAj2p4lWMIGH9OAolFXBzH30wnfwr-BDK6rUwHfR93S6tbKJ6COgl98bMAJbWlgSTzyNF18esyYVqMlNs06bVkxPOYBDB4YLy62IcCS-1xNa5BqSZLBCGDWbHiuKcFNm45OoSELo8OasPIXE9PslnyyTL61UYJzhrpM6-97FYD3lnfplfn7XlVPk3fL_eBbej5xDDaVv3oX8Pt7W1sSOra8" />
+<div>
+<div class="font-bold" style="color:#FFFFFF;font-size:0.875rem;">Emily Carter</div>
+<div style="color:rgba(255,255,255,0.45);font-size:0.75rem;">UI/UX Designer (Full time)</div>
+</div>
+</div>
+</div>
+<!-- Testimonial 3 -->
+<div class="flex flex-col h-full p-8 transition-all" style="background:rgba(255,255,255,0.05);border-radius:32px;backdrop-filter:blur(8px);">
+<div class="flex justify-between items-start mb-6">
+<img alt="Microsoft" class="h-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjPO9rd3OSnroYMgh8dRVWZG8DBUfEWghRfGqdlmNFlSnbdaHidVJrzS3M0ZxhlgRQdyGk0DfiYhUsIJRczSMAlqM77g_KslIbJJhNzrnwitr1DcDKb-yq5FtsAxJSzVi-PGc_vGrF581jnEw1BHjSY0oGzI22EUvbNNt2gHHI38JNhEd1PvaWbuqFdkBlDwqUyp3ozF7kXfE4qSOhFgLNYyU15LCGkL8_kElH1yqpWEvnU7QxwlW3WUADC7dksfgRDLuk-e5BOjQ" style="filter:brightness(0) invert(1);opacity:0.6;" />
+<div class="flex" style="color:#C7F22D;">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 fill-current" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+</div>
+</div>
+<p class="font-bold mb-4" style="color:#FFFFFF;font-size:1rem;">The most efficient job hunt ever.</p>
+<p class="mb-auto italic" style="color:rgba(255,255,255,0.65);font-size:0.9375rem;line-height:1.7;">"With Jobnova, I no longer had to juggle multiple job sites. It pulled the most relevant openings into one place and kept them updated in real time. I secured my role at Microsoft in less than a month, and it felt effortless."</p>
+<div class="flex items-center gap-4 mt-8">
+<img alt="Sofia" class="w-10 h-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8X9fN_UTMTLjx6wIvJ3rjVRD9fYQz9YDHzglxWgrPVnYLhoA_pFOeCf1cB8H6iUW9wo5_uk_VGDJdT9Sn4XomPD1mSu25QtOINAw65a1G4FulwPzYFt4scOThG9MzHaaTZlDyP9EocJKzs871MwN46P21aZ1T6f3cL7A5qmZuN8wcCBusx8vOvwlCcMAbZLfk7CAxFwteSWv5r5MqNQPf8pwYZS86LtmoeRs40nvwOZcqgwNeRNxtT_OIpPce0BFqu9kP103r0b0" />
+<div>
+<div class="font-bold" style="color:#FFFFFF;font-size:0.875rem;">Sofia Martinez</div>
+<div style="color:rgba(255,255,255,0.45);font-size:0.75rem;">Software Developer (Full time)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Testimonials -->
+
+<!-- BEGIN: FAQ Section -->
+<section id="faq" style="background:var(--surface-0);padding:140px 5vw;">
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+<p class="mb-3 text-center" style="font-size:0.75rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:#6366F1;">✦ FAQ</p>
+<h2 class="font-extrabold text-center mb-16" style="font-size:clamp(2rem,3.5vw,2.75rem);color:#0D0D0D;letter-spacing:-0.035em;line-height:1.1;text-wrap:balance;">Frequently Asked Questions</h2>
+<div class="faq-grid">
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-question">How does it work?<div class="faq-icon">+</div></div>
+<div class="faq-answer">Jobnova uses advanced AI algorithms to match your skills and interests to global jobs that are difficult to find on mainstream job sites. You'll receive daily, personalized recommendations via email. Importantly, nearly all the jobs we send your way are postings listed within the past 8 hours.</div>
+</div>
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-question">Which areas and functions do you support for job searching?<div class="faq-icon">+</div></div>
+<div class="faq-answer">Jobnova covers 30+ industries including tech, finance, consulting, design, and marketing — across product, engineering, operations, and more. New categories are added regularly based on user demand.</div>
+</div>
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-question">Can I cancel my subscription at any time?<div class="faq-icon">+</div></div>
+<div class="faq-answer">Yes — all paid plans can be cancelled anytime. Your access remains active until the end of the current billing period, with no additional charges.</div>
+</div>
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-question">Who can I contact for support or queries?<div class="faq-icon">+</div></div>
+<div class="faq-answer">You can reach our support team at <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f79b9e95969293829085988287b7909a969e9bd994989a">[email&#160;protected]</a> or via the in-app chat. We typically respond within a few hours on business days.</div>
+</div>
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-question">How many job recommendations will I receive?<div class="faq-icon">+</div></div>
+<div class="faq-answer">Free plan users receive up to 5 curated matches daily. Pro and Pro+ users receive unlimited personalized recommendations with priority delivery before listings go public.</div>
+</div>
+<div class="faq-item" onclick="this.classList.toggle('open')">
+<div class="faq-question">How often will I receive job alerts?<div class="faq-icon">+</div></div>
+<div class="faq-answer">You can configure your alert frequency — instantly, daily digest, or weekly summary. Most users opt for real-time alerts so they can be first to apply.</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: FAQ Section -->
+
+<!-- BEGIN: CTA Section -->
+<section style="background:var(--surface-0);padding:120px 5vw;text-align:center;position:relative;overflow:hidden;">
+<!-- Radial glow: tertiary accent on white bg -->
+<div style="position:absolute;top:-40%;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(ellipse,rgba(199,242,45,0.18) 0%,transparent 70%);pointer-events:none;"></div>
+<div style="max-width:860px;margin:0 auto;position:relative;">
+<p style="font-size:0.75rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--tertiary);margin-bottom:1.5rem;">✦ Get Started</p>
+<h2 style="font-size:clamp(2.25rem,5vw,4rem);font-weight:800;line-height:1.1;letter-spacing:-0.04em;color:var(--dark);text-wrap:balance;margin-bottom:1.5rem;">
+Ready to Land Your <span style="text-decoration:underline;text-decoration-color:var(--primary);text-underline-offset:10px;text-decoration-thickness:4px;">Dream Role</span> Faster?
+</h2>
+<p style="font-size:1.125rem;color:var(--text-secondary);line-height:1.7;max-width:520px;margin:0 auto 3rem;font-weight:400;">
+Join the next generation of job searching. Secure your dream role with AI-driven precision.
+</p>
+<!-- Primary button: pill, primary bg, dark text, ExtraBold -->
+<a href="#" style="display:inline-flex;align-items:center;justify-content:center;background:var(--primary);color:var(--dark);border-radius:999px;padding:18px 52px;font-family:'Plus Jakarta Sans',sans-serif;font-size:1.0625rem;font-weight:800;text-decoration:none;white-space:nowrap;transition:transform 0.15s,box-shadow 0.15s;"
+onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 14px 40px rgba(199,242,45,0.4)'"
+onmouseout="this.style.transform='';this.style.boxShadow=''">
+Start Explore for Free
+</a>
+<p style="font-size:0.8125rem;color:var(--text-muted);margin-top:1.5rem;font-weight:500;">No credit card required · Cancel anytime · 30-day refund guarantee</p>
+</div>
+</section>
+<!-- END: CTA Section -->
+
+<!-- BEGIN: Footer -->
+<footer style="background:#fff; border-top:1px solid #e2e8f0; display:flex; flex-direction:column; gap:64px; padding:65px 0 32px; width:100%;">
+
+  <!-- Top: 4-column content -->
+  <div style="max-width:1280px; width:100%; margin:0 auto; padding:0 72px; display:flex; justify-content:space-between; align-items:flex-start; box-sizing:border-box;">
+
+    <!-- Brand -->
+    <div style="display:flex; flex-direction:column; gap:18px; width:164px; flex-shrink:0;">
+      <img src="https://www.figma.com/api/mcp/asset/ba1b2d6c-a0cd-4a03-a34c-87e122c90c3b" alt="Jobnova icon" style="width:48px; height:48px; object-fit:cover; display:block;" />
+      <img src="https://www.figma.com/api/mcp/asset/1e02fad9-7bf1-484f-9441-d36e25e57832" alt="JobNova" style="width:129px; height:25.68px; object-fit:cover; display:block;" />
+    </div>
+
+    <!-- Address + Contact -->
+    <div style="display:flex; flex-direction:column; justify-content:space-between; height:212px; width:201px; flex-shrink:0;">
+      <div style="display:flex; flex-direction:column; gap:24px;">
+        <p style="font-family:'Inter',sans-serif; font-size:24px; font-weight:500; line-height:32px; color:#84888b; margin:0;">Address</p>
+        <p style="font-family:'Inter',sans-serif; font-size:16px; font-weight:400; line-height:24px; color:#84888b; margin:0;">1055 N Capitol Ave, San Jose, CA, 95133</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:24px;">
+        <p style="font-family:'Inter',sans-serif; font-size:24px; font-weight:500; line-height:32px; color:#84888b; margin:0;">Contact</p>
+        <p style="font-family:'Lexend','Inter',sans-serif; font-size:16px; font-weight:400; line-height:1.6; color:#84888b; margin:0; white-space:nowrap;"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0f63666d6e6a6b7a687d607a7f4f68626e6663216c6062">[email&#160;protected]</a></p>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div style="display:flex; flex-direction:column; gap:24px; width:125px; flex-shrink:0;">
+      <p style="font-family:'Inter',sans-serif; font-size:24px; font-weight:500; line-height:32px; color:#84888b; margin:0; white-space:nowrap;">Navigation</p>
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        <a href="#features" style="font-family:'Inter',sans-serif; font-size:16px; font-weight:400; line-height:24px; color:#84888b; text-decoration:none; white-space:nowrap;">Feature</a>
+        <a href="#pricing" style="font-family:'Inter',sans-serif; font-size:16px; font-weight:400; line-height:24px; color:#84888b; text-decoration:none; white-space:nowrap;">Pricing</a>
+        <a href="#faq" style="font-family:'Inter',sans-serif; font-size:16px; font-weight:400; line-height:24px; color:#84888b; text-decoration:none; white-space:nowrap;">FAQs</a>
+        <a href="#" style="font-family:'Inter',sans-serif; font-size:16px; font-weight:400; line-height:24px; color:#84888b; text-decoration:none; white-space:nowrap;">Affiliate 30%</a>
+      </div>
+    </div>
+
+    <!-- Help / QR -->
+    <div style="display:flex; flex-direction:column; gap:30px; width:218px; flex-shrink:0;">
+      <p style="font-family:'Inter',sans-serif; font-size:24px; font-weight:500; line-height:32px; color:#84888b; margin:0;">Help</p>
+      <img src="https://www.figma.com/api/mcp/asset/7ee700ef-42cf-46d4-a307-a12242c857a1" alt="QR Code" style="width:146.33px; height:145.58px; display:block;" />
+    </div>
+
+  </div>
+
+  <!-- Bottom bar -->
+  <div style="max-width:1280px; width:100%; margin:0 auto; padding:33px 32px 0; box-sizing:border-box; border-top:1px solid rgba(226,232,240,0.5); display:flex; align-items:center; justify-content:space-between;">
+
+    <!-- Social icons -->
+    <div style="display:flex; gap:34px; align-items:center;">
+      <a href="#"><img src="https://www.figma.com/api/mcp/asset/1a932fde-7235-47b8-b0e1-55e853c85dfa" alt="Twitter" style="width:24px; height:24px; display:block;" /></a>
+      <a href="#"><img src="https://www.figma.com/api/mcp/asset/61bdb1f9-283a-4da0-8497-ae752ef320c2" alt="Facebook" style="width:24px; height:24px; display:block;" /></a>
+      <a href="#"><img src="https://www.figma.com/api/mcp/asset/6866268e-c14c-400a-a27e-b2d0561d812a" alt="Instagram" style="width:24px; height:24px; display:block;" /></a>
+      <a href="#"><img src="https://www.figma.com/api/mcp/asset/93aa27c4-7d08-4210-b6e7-8a181317ddee" alt="LinkedIn" style="width:24px; height:24px; display:block;" /></a>
+    </div>
+
+    <!-- Copyright -->
+    <p style="font-family:'Inter',sans-serif; font-size:14px; font-weight:400; line-height:22.75px; color:#84888b; margin:0; text-align:center; white-space:nowrap;">© 2026 JobNova. All rights reserved.</p>
+
+    <!-- Tagline -->
+    <p style="font-family:'Inter',sans-serif; font-size:14px; font-weight:400; line-height:22.75px; color:#84888b; margin:0; text-align:center; white-space:nowrap;">A product by <a href="https://www.linkedin.com/in/your-profile" style="color:#84888b; text-decoration:none;">Your Name</a></p>
